@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Preisalarm">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Preisalarm</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a; --surface: #111; --surface2: #161616;
+    --border: #1e1e1e; --gold: #d4a843; --silver: #a8b8c8;
+    --btc: #f7931a; --text: #e8e8e8; --muted: #555;
+    --green: #4caf72; --red: #e05555;
+  }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh; padding: 52px 18px 32px;
+    max-width: 480px; margin: 0 auto;
+  }
+  header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 28px;
+  }
+  .logo-area h1 {
+    font-family: 'Syne', sans-serif; font-size: 20px;
+    font-weight: 800; letter-spacing: -0.5px;
+  }
+  .logo-area p { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.4px; }
+  .refresh-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; width: 38px; height: 38px;
+    font-size: 17px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+  }
+  .refresh-btn:active { background: var(--surface2); }
+  .refresh-btn.spinning { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-bar {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 20px; font-size: 10px; color: var(--muted); letter-spacing: 0.3px;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .status-dot.live { background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 18px; display: flex;
+    align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden; transition: border-color 0.2s;
+  }
+  .card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .card.gold::before { background: var(--gold); }
+  .card.silver::before { background: var(--silver); }
+  .card.btc::before { background: var(--btc); }
+  .card-left { display: flex; align-items: center; gap: 13px; }
+  .icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; letter-spacing: -0.5px; flex-shrink: 0;
+  }
+  .gold .icon { background: rgba(212,168,67,0.12); color: var(--gold); }
+  .silver .icon { background: rgba(168,184,200,0.12); color: var(--silver); }
+  .btc .icon { background: rgba(247,147,26,0.12); color: var(--btc); }
+  .card-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+  .card-unit { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .card-right { text-align: right; }
+  .price { font-size: 20px; font-weight: 500; letter-spacing: -0.8px; min-width: 80px; }
+  .gold .price { color: var(--gold); }
+  .silver .price { color: var(--silver); }
+  .btc .price { color: var(--btc); }
+  .price-loading { color: var(--muted); font-size: 13px; animation: blink 1.2s infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .price-error { color: var(--red); font-size: 12px; }
+  .alarm-badge { font-size: 10px; margin-top: 4px; color: var(--muted); }
+  .alarm-badge.active { color: var(--green); }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+  }
+  .alarm-form {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 24px;
+  }
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .form-row:last-child { margin-bottom: 0; }
+  select, input {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 9px; padding: 11px 12px;
+    font-family: 'DM Mono', monospace; font-size: 13px; outline: none;
+    -webkit-appearance: none; transition: border-color 0.2s; flex: 1;
+  }
+  select:focus, input:focus { border-color: #333; }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 0; }
+  .btn-add {
+    background: var(--text); color: var(--bg); border: none;
+    border-radius: 9px; padding: 12px; font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 800; cursor: pointer; width: 100%;
+    letter-spacing: 0.3px; transition: opacity 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-add:active { opacity: 0.8; transform: scale(0.98); }
+  .alarms-list { display: flex; flex-direction: column; gap: 8px; }
+  .alarm-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px 14px; display: flex;
+    align-items: center; justify-content: space-between; gap: 10px;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .alarm-item.triggered { border-color: rgba(76,175,114,0.3); background: rgba(76,175,114,0.04); }
+  .alarm-info { flex: 1; min-width: 0; }
+  .alarm-tag {
+    display: inline-block; font-size: 10px; font-weight: 500;
+    padding: 2px 7px; border-radius: 4px; margin-bottom: 5px; letter-spacing: 0.3px;
+  }
+  .tag-gold { background: rgba(212,168,67,0.12); color: var(--gold); }
+  .tag-silver { background: rgba(168,184,200,0.12); color: var(--silver); }
+  .tag-btc { background: rgba(247,147,26,0.12); color: var(--btc); }
+  .alarm-desc { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alarm-status { font-size: 10px; margin-top: 3px; color: var(--muted); }
+  .alarm-status.triggered { color: var(--green); }
+  .btn-delete {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 7px; width: 30px; height: 30px; cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+  }
+  .btn-delete:active { border-color: var(--red); color: var(--red); }
+  .empty-state {
+    text-align: center; color: var(--muted); font-size: 12px;
+    padding: 24px 0; border: 1px dashed var(--border); border-radius: 12px;
+  }
+  .toast {
+    position: fixed; top: 16px; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); padding: 11px 18px; border-radius: 10px;
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999; white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-width: 90vw;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.alarm { background: #1a2e1f; border-color: var(--green); color: var(--green); }
+
+  /* API source indicator */
+  .api-source { font-size: 9px; color: #333; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<header>
+  <div class="logo-area">
+    <h1>⚡ Preisalarm</h1>
+    <p>Gold · Silber · Bitcoin in EUR</p>
+  </div>
+  <button class="refresh-btn" id="refreshBtn" onclick="fetchAll()">↻</button>
+</header>
+
+<div class="status-bar">
+  <div class="status-dot" id="statusDot"></div>
+  <span id="statusText">Verbinde…</span>
+</div>
+
+<div class="cards">
+  <div class="card gold">
+    <div class="card-left">
+      <div class="icon">Au</div>
+      <div>
+        <div class="card-name">Gold</div>
+        <div class="card-unit">pro Unze · EUR</div>
+      </div>
+    </div>
+    <div class="card-right">
+      <div class="price" id="price-gold"><span class="price-loading">···</span></div>
+      <div class="alarm-badge" id="badge-gold">–</div>
+    </div>
+  </div>
+
+  <div class="card silver">
+    <div class="card-left">
+      <div class="icon">Ag</div>
+      <div>
+        <div class="card-name">Silber</div>
+        <div class="card-unit">pro Unze · EUR</div>
+      </div>
+    </div>
+    <div class="card-right">
+      <div class="price" id="price-silver"><span class="price-loading">···</span></div>
+      <div class="alarm-badge" id="badge-silver">–</div>
+    </div>
+  </div>
+
+  <div class="card btc">
+    <div class="card-left">
+      <div class="icon">₿</div>
+      <div>
+        <div class="card-name">Bitcoin</div>
+        <div class="card-unit">pro BTC · EUR</div>
+      </div>
+    </div>
+    <div class="card-right">
+      <div class="price" id="price-btc"><span class="price-loading">···</span></div>
+      <div class="alarm-badge" id="badge-btc">–</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section-title">Alarm setzen</div>
+<div class="alarm-form">
+  <div class="form-row">
+    <select id="alarmAsset">
+      <option value="gold">🥇 Gold (€/oz)</option>
+      <option value="silver">🥈 Silber (€/oz)</option>
+      <option value="btc">₿ Bitcoin (€)</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <select id="alarmDirection">
+      <option value="below">↓ fällt unter</option>
+      <option value="above">↑ steigt über</option>
+    </select>
+    <input type="number" id="alarmPrice" placeholder="Preis in €" step="any" min="0" inputmode="decimal" />
+  </div>
+  <div class="form-row">
+    <button class="btn-add" onclick="addAlarm()">+ Alarm hinzufügen</button>
+  </div>
+</div>
+
+<div class="section-title">Aktive Alarme</div>
+<div class="alarms-list" id="alarmsList"></div>
+
+<script>
+  let prices = { gold: null, silver: null, btc: null };
+  let alarms = JSON.parse(localStorage.getItem('preisalarme_v2') || '[]');
+
+  const fmt = (val, asset) => new Intl.NumberFormat('de-DE', {
+    style: 'currency', currency: 'EUR',
+    maximumFractionDigits: asset === 'btc' ? 0 : 2,
+    minimumFractionDigits: asset === 'btc' ? 0 : 2
+  }).format(val);
+
+  // ── Fetch with timeout helper ──────────────────────────
+  async function fetchWithTimeout(url, ms = 8000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), ms);
+    try {
+      const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+      clearTimeout(id);
+      return res;
+    } catch(e) {
+      clearTimeout(id);
+      throw e;
+    }
+  }
+
+  // ── Get EUR/USD rate ───────────────────────────────────
+  async function getEurUsdRate() {
+    const sources = [
+      async () => {
+        const r = await fetchWithTimeout('https://api.frankfurter.app/latest?from=USD&to=EUR');
+        const d = await r.json();
+        return d.rates.EUR;
+      },
+      async () => {
+        const r = await fetchWithTimeout('https://open.er-api.com/v6/latest/USD');
+        const d = await r.json();
+        return d.rates.EUR;
+      }
+    ];
+    for (const source of sources) {
+      try { return await source(); } catch(e) { continue; }
+    }
+    return 0.92;
+  }
+
+  // ── Fetch Gold & Silver via Yahoo Finance (CORS proxy) ─
+  async function fetchMetals(eurRate) {
+    const sources = [
+      // Source 1: Yahoo Finance via allorigins CORS proxy
+      async () => {
+        const symbols = 'GC=F,SI=F'; // Gold & Silver futures USD
+        const url = `https://query1.finance.yahoo.com/v8/finance/spark?symbols=${symbols}&range=1d&interval=1d`;
+        const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const r = await fetchWithTimeout(proxy);
+        const outer = await r.json();
+        const d = JSON.parse(outer.contents);
+        const goldUSD = d.spark?.result?.find(x => x.symbol === 'GC=F')?.response?.[0]?.meta?.regularMarketPrice;
+        const silverUSD = d.spark?.result?.find(x => x.symbol === 'SI=F')?.response?.[0]?.meta?.regularMarketPrice;
+        if (!goldUSD) throw new Error('no data');
+        return { gold: goldUSD * eurRate, silver: silverUSD * eurRate };
+      },
+      // Source 2: metals.live direct
+      async () => {
+        const r = await fetchWithTimeout('https://api.metals.live/v1/spot');
+        const d = await r.json();
+        const goldUSD = d.find(m => m.gold !== undefined)?.gold;
+        const silverUSD = d.find(m => m.silver !== undefined)?.silver;
+        if (!goldUSD) throw new Error('no data');
+        return { gold: goldUSD * eurRate, silver: silverUSD * eurRate };
+      },
+      // Source 3: gold-api.com
+      async () => {
+        const [gRes, sRes] = await Promise.all([
+          fetchWithTimeout('https://www.gold-api.com/price/XAU'),
+          fetchWithTimeout('https://www.gold-api.com/price/XAG')
+        ]);
+        const gData = await gRes.json();
+        const sData = await sRes.json();
+        if (!gData.price) throw new Error('no data');
+        return { gold: gData.price * eurRate, silver: sData.price * eurRate };
+      },
+      // Source 4: corsproxy.io + metals.live
+      async () => {
+        const url = 'https://api.metals.live/v1/spot';
+        const r = await fetchWithTimeout(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+        const d = await r.json();
+        const goldUSD = d.find(m => m.gold !== undefined)?.gold;
+        const silverUSD = d.find(m => m.silver !== undefined)?.silver;
+        if (!goldUSD) throw new Error('no data');
+        return { gold: goldUSD * eurRate, silver: silverUSD * eurRate };
+      }
+    ];
+
+    for (const source of sources) {
+      try { return await source(); } catch(e) { continue; }
+    }
+    return null;
+  }
+
+  // ── Main fetch ─────────────────────────────────────────
+  async function fetchAll() {
+    const btn = document.getElementById('refreshBtn');
+    const dot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    btn.classList.add('spinning');
+    statusText.textContent = 'Aktualisiere…';
+
+    let successCount = 0;
+
+    // Bitcoin via CoinGecko
+    try {
+      const res = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur');
+      const data = await res.json();
+      prices.btc = data.bitcoin.eur;
+      document.getElementById('price-btc').textContent = fmt(prices.btc, 'btc');
+      successCount++;
+    } catch(e) {
+      // Fallback: Coinbase
+      try {
+        const res = await fetchWithTimeout('https://api.coinbase.com/v2/prices/BTC-EUR/spot');
+        const data = await res.json();
+        prices.btc = parseFloat(data.data.amount);
+        document.getElementById('price-btc').textContent = fmt(prices.btc, 'btc');
+        successCount++;
+      } catch(e2) {
+        document.getElementById('price-btc').innerHTML = '<span class="price-error">Fehler</span>';
+      }
+    }
+
+    // Gold & Silver
+    try {
+      const eurRate = await getEurUsdRate();
+      const metals = await fetchMetals(eurRate);
+
+      if (metals && metals.gold) {
+        prices.gold = metals.gold;
+        document.getElementById('price-gold').textContent = fmt(prices.gold, 'gold');
+        successCount++;
+      } else {
+        document.getElementById('price-gold').innerHTML = '<span class="price-error">Fehler</span>';
+      }
+
+      if (metals && metals.silver) {
+        prices.silver = metals.silver;
+        document.getElementById('price-silver').textContent = fmt(prices.silver, 'silver');
+        successCount++;
+      } else {
+        document.getElementById('price-silver').innerHTML = '<span class="price-error">Fehler</span>';
+      }
+    } catch(e) {
+      document.getElementById('price-gold').innerHTML = '<span class="price-error">Fehler</span>';
+      document.getElementById('price-silver').innerHTML = '<span class="price-error">Fehler</span>';
+    }
+
+    const now = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    if (successCount > 0) {
+      dot.className = 'status-dot live';
+      statusText.textContent = `Zuletzt: ${now} Uhr · Auto-Update alle 60s`;
+    } else {
+      dot.className = 'status-dot';
+      statusText.textContent = 'Keine Verbindung – tippe ↻ zum Retry';
+    }
+
+    btn.classList.remove('spinning');
+    checkAlarms();
+    updateBadges();
+  }
+
+  // ── Alarm Logic ────────────────────────────────────────
+  function addAlarm() {
+    const asset = document.getElementById('alarmAsset').value;
+    const direction = document.getElementById('alarmDirection').value;
+    const priceInput = document.getElementById('alarmPrice');
+    const price = parseFloat(priceInput.value);
+
+    if (!price || price <= 0) {
+      priceInput.style.borderColor = 'var(--red)';
+      priceInput.focus();
+      setTimeout(() => priceInput.style.borderColor = '', 1500);
+      return;
+    }
+
+    alarms.push({ id: Date.now(), asset, direction, price, triggered: false });
+    save();
+    render();
+    updateBadges();
+    priceInput.value = '';
+    showToast('Alarm gesetzt ✓', false);
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function deleteAlarm(id) {
+    alarms = alarms.filter(a => a.id !== id);
+    save();
+    render();
+    updateBadges();
+  }
+
+  function checkAlarms() {
+    let anyTriggered = false;
+    alarms.forEach(a => {
+      if (a.triggered) return;
+      const current = prices[a.asset];
+      if (!current) return;
+      const hit = a.direction === 'below' ? current <= a.price : current >= a.price;
+      if (hit) {
+        a.triggered = true;
+        anyTriggered = true;
+        const names = { gold: 'Gold', silver: 'Silber', btc: 'Bitcoin' };
+        const dir = a.direction === 'below' ? 'unter' : 'über';
+        const msg = `${names[a.asset]} ${dir} ${fmt(a.price, a.asset)}!`;
+        showToast('🔔 ' + msg, true);
+        if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('🔔 Preisalarm!', { body: msg, icon: './icon-192.png' });
+        }
+      }
+    });
+    if (anyTriggered) { save(); render(); }
+  }
+
+  function render() {
+    const list = document.getElementById('alarmsList');
+    if (alarms.length === 0) {
+      list.innerHTML = '<div class="empty-state">Noch keine Alarme gesetzt</div>';
+      return;
+    }
+    const names = { gold: 'Gold', silver: 'Silber', btc: 'Bitcoin' };
+    list.innerHTML = [...alarms].reverse().map(a => `
+      <div class="alarm-item ${a.triggered ? 'triggered' : ''}">
+        <div class="alarm-info">
+          <span class="alarm-tag tag-${a.asset}">${names[a.asset]}</span>
+          <div class="alarm-desc">${a.direction === 'below' ? '↓ unter' : '↑ über'} ${fmt(a.price, a.asset)}</div>
+          <div class="alarm-status ${a.triggered ? 'triggered' : ''}">${a.triggered ? '✓ Ausgelöst' : '⏳ Wartet…'}</div>
+        </div>
+        <button class="btn-delete" onclick="deleteAlarm(${a.id})">×</button>
+      </div>
+    `).join('');
+  }
+
+  function updateBadges() {
+    ['gold', 'silver', 'btc'].forEach(asset => {
+      const active = alarms.filter(a => a.asset === asset && !a.triggered).length;
+      const el = document.getElementById(`badge-${asset}`);
+      el.textContent = active > 0 ? `${active} Alarm${active > 1 ? 'e' : ''} aktiv` : 'Kein Alarm';
+      el.className = 'alarm-badge' + (active > 0 ? ' active' : '');
+    });
+  }
+
+  let toastTimer;
+  function showToast(msg, isAlarm = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isAlarm ? ' alarm' : '') + ' show';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), isAlarm ? 5000 : 2500);
+  }
+
+  function save() { localStorage.setItem('preisalarme_v2', JSON.stringify(alarms)); }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  render();
+  updateBadges();
+  fetchAll();
+  setInterval(fetchAll, 60000);
+</script>
+</body>
+</html>

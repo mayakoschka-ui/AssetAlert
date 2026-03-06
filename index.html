@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <title>Preisalarm</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -101,7 +103,7 @@ select, input { flex: 1; background: var(--bg); border: 1px solid var(--border);
 <div class="label">Aktive Alarme</div>
 <div class="alarms" id="alist"></div>
 <script>
-const SERVER = 'https://assetalert-1.onrender.com';
+const SERVER = 'https://DEIN-SERVER.onrender.com';
 let P = {gold:null, silver:null, btc:null};
 let alarms = JSON.parse(localStorage.getItem('pa_v6') || '[]');
 const euro = (v,a) => new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:a==='btc'?0:2,minimumFractionDigits:a==='btc'?0:2}).format(v);
@@ -123,6 +125,10 @@ async function load() {
   } catch(e) { dot.className='dot err'; stxt.textContent='Server nicht erreichbar'; }
   btn.classList.remove('spin');
 }
+// On cold start, retry after 15s if no prices loaded
+setTimeout(() => {
+  if(!P.gold && !P.btc) load();
+}, 15000);
 function addAlarm() {
   const asset=document.getElementById('asset').value, dir=document.getElementById('dir').value;
   const inp=document.getElementById('aprice'), price=parseFloat(inp.value);
@@ -194,6 +200,8 @@ function playAlarmSound() {
 function save(){localStorage.setItem('pa_v6',JSON.stringify(alarms));}
 render();updateBadges();load();
 setInterval(load,60000);
+// Keep server alive - ping every 10 minutes
+setInterval(() => fetch(SERVER + '/').catch(()=>{}), 600000);
 </script>
 </body>
 </html>

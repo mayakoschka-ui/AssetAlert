@@ -101,7 +101,7 @@ select, input { flex: 1; background: var(--bg); border: 1px solid var(--border);
 <div class="label">Aktive Alarme</div>
 <div class="alarms" id="alist"></div>
 <script>
-const SERVER = 'https://DEIN-SERVER.onrender.com';
+const SERVER = 'https://assetalet-1.onrender.com';
 let P = {gold:null, silver:null, btc:null};
 let alarms = JSON.parse(localStorage.getItem('pa_v6') || '[]');
 const euro = (v,a) => new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:a==='btc'?0:2,minimumFractionDigits:a==='btc'?0:2}).format(v);

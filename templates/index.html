@@ -315,23 +315,18 @@ try{const r=await fetch('https://open.er-api.com/v6/latest/USD');const d=await r
 return null;
 }
 
-async function fetchGoldSilver(){  const proxy='https://corsproxy.io/?url=';
-  try{
-    const r=await fetch(proxy+encodeURIComponent('https://metals.live/api/v1/spot'));
-    const data=await r.json();
-    let obj=Array.isArray(data)?data.find(x=>x.gold)||{}:data;
-    if(obj.gold&&obj.silver)return{gold:parseFloat(obj.gold),silver:parseFloat(obj.silver)};
+async function fetchGoldSilver(){  try{
+    const [rg, rs] = await Promise.all([
+      fetch('https://gold-api.com/price/XAU'),
+      fetch('https://gold-api.com/price/XAG')
+    ]);
+    const dg = await rg.json();
+    const ds = await rs.json();
+    if(dg.price && ds.price){
+      return{gold:parseFloat(dg.price), silver:parseFloat(ds.price)};
+    }
   }catch(e){}
-  try{
-    const r=await fetch(proxy+encodeURIComponent('https://stooq.com/q/l/?s=xauusd&f=sd2t2ohlcv&h&e=csv'));
-    const lines=(await r.text()).trim().split('\n');
-    const gold=lines[1]?parseFloat(lines[1].split(',')[6]):null;
-    const r2=await fetch(proxy+encodeURIComponent('https://stooq.com/q/l/?s=xagusd&f=sd2t2ohlcv&h&e=csv'));
-    const lines2=(await r2.text()).trim().split('\n');
-    const silver=lines2[1]?parseFloat(lines2[1].split(',')[6]):null;
-    if(gold&&silver)return{gold,silver};
-  }catch(e){}
-  return{gold:null,silver:null};
+  return{gold:null, silver:null};
 }
 
 async function fetchBTC(){

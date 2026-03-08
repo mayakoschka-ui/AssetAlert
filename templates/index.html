@@ -316,17 +316,11 @@ return null;
 }
 
 async function fetchGoldSilver(){  try{
-    const [rg, rs] = await Promise.all([
-      fetch('https://gold-api.com/price/XAU'),
-      fetch('https://gold-api.com/price/XAG')
-    ]);
-    const dg = await rg.json();
-    const ds = await rs.json();
-    if(dg.price && ds.price){
-      return{gold:parseFloat(dg.price), silver:parseFloat(ds.price)};
-    }
+    const r=await fetch('/api/metals');
+    const d=await r.json();
+    if(d.gold&&d.silver)return{gold:parseFloat(d.gold),silver:parseFloat(d.silver)};
   }catch(e){}
-  return{gold:null, silver:null};
+  return{gold:null,silver:null};
 }
 
 async function fetchBTC(){

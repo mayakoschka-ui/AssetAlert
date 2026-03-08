@@ -151,7 +151,8 @@ def api_prices():
 def health():
     return jsonify({'ok': True, 'time': time.time()})
 
-@app.route('/api/metals')def api_metals():
+@app.route('/api/metals')
+def api_metals():
     gold  = None
     silver = None
     try:

@@ -315,14 +315,24 @@ try{const r=await fetch('https://open.er-api.com/v6/latest/USD');const d=await r
 return null;
 }
 
-async function fetchGoldSilver(){
-try{
-const r=await fetch('https://metals.live/api/v1/spot');
-const data=await r.json();
-let obj=Array.isArray(data)?data.find(x=>x.gold)||{}:data;
-if(obj.gold&&obj.silver)return{gold:parseFloat(obj.gold),silver:parseFloat(obj.silver)};
-}catch(e){}
-return{gold:null,silver:null};
+async function fetchGoldSilver(){  try{
+    const r=await fetch('https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD');
+    const d=await r.json();
+    const gold=d[0]&&d[0].bestAsk?parseFloat(d[0].bestAsk):null;
+    if(gold){
+      const rs=await fetch('https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAG/USD');
+      const ds=await rs.json();
+      const silver=ds[0]&&ds[0].bestAsk?parseFloat(ds[0].bestAsk):null;
+      if(gold&&silver)return{gold,silver};
+    }
+  }catch(e){}
+  try{
+    const r=await fetch('https://metals.live/api/v1/spot');
+    const data=await r.json();
+    let obj=Array.isArray(data)?data.find(x=>x.gold)||{}:data;
+    if(obj.gold&&obj.silver)return{gold:parseFloat(obj.gold),silver:parseFloat(obj.silver)};
+  }catch(e){}
+  return{gold:null,silver:null};
 }
 
 async function fetchBTC(){

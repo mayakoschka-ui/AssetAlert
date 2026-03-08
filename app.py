@@ -152,8 +152,8 @@ def health():
     return jsonify({'ok': True, 'time': time.time()})
 
 @app.route('/api/metals')def api_metals():
-    gold = None
-    silver = None
+    gold  = None
+    silver = None
     try:
         r = SESSION.get('https://gold-api.com/price/XAU', timeout=10)
         gold = r.json().get('price')

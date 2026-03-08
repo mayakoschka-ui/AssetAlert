@@ -151,6 +151,20 @@ def api_prices():
 def health():
     return jsonify({'ok': True, 'time': time.time()})
 
+@app.route('/api/metals')def api_metals():
+    gold = None
+    silver = None
+    try:
+        r = SESSION.get('https://gold-api.com/price/XAU', timeout=10)
+        gold = r.json().get('price')
+    except:
+        pass
+    try:
+        r = SESSION.get('https://gold-api.com/price/XAG', timeout=10)
+        silver = r.json().get('price')
+    except:
+        pass
+    return jsonify({'gold': gold, 'silver': silver})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

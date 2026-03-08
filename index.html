@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="AssetAlert" />
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <title>AssetAlert</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #D4AF37;
+      --gold-light: #F5D060;
+      --gold-dark: #A0862A;
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --surface3: #222222;
+      --text: #f0ece0;
+      --text-dim: #7a7060;
+      --green: #3ddc84;
+      --red: #ff4d4d;
+      --border: rgba(212,175,55,0.18);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #111 0%, var(--bg) 100%);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: #0a0a0a;
+      border: 1.5px solid var(--gold);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(212,175,55,0.3);
+      flex-shrink: 0;
+    }
+
+    .logo-icon svg { width: 22px; height: 22px; }
+
+    .header-text h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .header-text p {
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .status-dot {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: background 0.5s;
+    }
+    .dot.live { background: var(--green); animation: pulse 2s infinite; }
+    .dot.error { background: var(--red); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 520px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── ASSET CARD ── */
+    .asset-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: box-shadow 0.3s;
+    }
+
+    .asset-card.alert-triggered {
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(212,175,55,0.25);
+      animation: cardFlash 0.6s ease;
+    }
+
+    @keyframes cardFlash {
+      0%, 100% { box-shadow: 0 0 20px rgba(212,175,55,0.25); }
+      50% { box-shadow: 0 0 40px rgba(212,175,55,0.6); }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 18px 12px;
+      gap: 14px;
+    }
+
+    .asset-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .asset-icon.gold-icon { background: linear-gradient(135deg, #3a2e00, #6b5200); }
+    .asset-icon.silver-icon { background: linear-gradient(135deg, #1a1a2e, #2a2a3e); }
+    .asset-icon.btc-icon { background: linear-gradient(135deg, #2e1500, #5a2a00); }
+
+    .asset-info { flex: 1; min-width: 0; }
+
+    .asset-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .asset-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .price-display {
+      text-align: right;
+    }
+
+    .price-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      transition: color 0.3s;
+    }
+
+    .price-value.up { color: var(--green); }
+    .price-value.down { color: var(--red); }
+    .price-value.loading { color: var(--text-dim); font-size: 16px; animation: shimmer 1.5s infinite; }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .price-unit {
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 3px;
+      text-align: right;
+    }
+
+    /* ── ALERTS SECTION ── */
+    .alerts-section {
+      border-top: 1px solid var(--border);
+      padding: 14px 18px 16px;
+      background: var(--surface2);
+    }
+
+    .alerts-title {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alerts-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .alert-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .alert-group label {
+      display: block;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--surface3);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrap:focus-within {
+      border-color: var(--gold-dark);
+    }
+
+    .input-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 15px;
+      padding: 11px 12px;
+      outline: none;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .input-wrap input::placeholder { color: var(--text-dim); font-size: 13px; }
+
+    .input-currency {
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 0 10px 0 0;
+      white-space: nowrap;
+    }
+
+    .alert-status {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .alert-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: var(--surface3);
+      color: var(--text-dim);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s;
+    }
+
+    .alert-badge.active-high {
+      background: rgba(255,77,77,0.12);
+      color: var(--red);
+      border-color: rgba(255,77,77,0.3);
+    }
+
+    .alert-badge.active-low {
+      background: rgba(61,220,132,0.1);
+      color: var(--green);
+      border-color: rgba(61,220,132,0.3);
+    }
+
+    .alert-badge svg { width: 12px; height: 12px; }
+
+    /* ── BOTTOM BAR ── */
+    footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+    }
+
+    .next-update {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .sound-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .sound-toggle.active {
+      color: var(--gold);
+      border-color: var(--gold-dark);
+      background: rgba(212,175,55,0.08);
+    }
+
+    .sound-toggle svg { width: 16px; height: 16px; }
+
+    /* ── NOTIFICATION TOAST ── */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: calc(100% - 32px);
+      max-width: 480px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(212,175,55,0.2);
+      animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      pointer-events: all;
+    }
+
+    .toast.hide {
+      animation: toastOut 0.3s ease forwards;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-20px) scale(0.9); }
+    }
+
+    .toast-icon { font-size: 24px; }
+
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 600; font-size: 14px; color: var(--gold); margin-bottom: 2px; }
+    .toast-msg { font-size: 12px; color: var(--text-dim); }
+
+    /* ── PROGRESS BAR ── */
+    .refresh-bar {
+      height: 2px;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .refresh-bar-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+      transition: width 1s linear;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 360px) {
+      .price-value { font-size: 18px; }
+      .asset-name { font-size: 17px; }
+      .input-wrap input { font-size: 14px; padding: 10px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#D4AF37" stroke="#D4AF37" stroke-width="1" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <h1>AssetAlert</h1>
+    <p>Live Preise &amp; Alarme</p>
+  </div>
+  <div class="status-dot">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">–</span>
+  </div>
+</header>
+
+<div class="refresh-bar"><div class="refresh-bar-fill" id="progressBar" style="width:0%"></div></div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<main>
+
+  <!-- GOLD -->
+  <div class="asset-card" id="card-gold">
+    <div class="card-header">
+      <div class="asset-icon gold-icon">🥇</div>
+      <div class="asset-info">
+        <div class="asset-name">Gold</div>
+        <div class="asset-sub">XAU · COMEX GC=F</div>
+      </div>
+      <div class="price-display">
+        <div class="price-value loading" id="price-gold">–</div>
+        <div class="price-unit">USD / oz</div>
+      </div>
+    </div>
+    <div class="alerts-section">
+      <div class="alerts-title">Preisalarm</div>
+      <div class="alert-row">
+        <div class="alert-group">
+          <label>▲ Alarm ÜBER</label>
+          <div class="input-wrap">
+            <input type="number" id="alert-gold-high" placeholder="z.B. 3200" step="1" min="0">
+            <span class="input-currency">$</span>
+          </div>
+        </div>
+        <div class="alert-group">
+          <label>▼ Alarm UNTER</label>
+          <div class="input-wrap">
+            <input type="number" id="alert-gold-low" placeholder="z.B. 2900" step="1" min="0">
+            <span class="input-currency">$</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert-status" id="status-gold"></div>
+    </div>
+  </div>
+
+  <!-- SILVER -->
+  <div class="asset-card" id="card-silver">
+    <div class="card-header">
+      <div class="asset-icon silver-icon">🥈</div>
+      <div class="asset-info">
+        <div class="asset-name">Silber</div>
+        <div class="asset-sub">XAG · COMEX SI=F</div>
+      </div>
+      <div class="price-display">
+        <div class="price-value loading" id="price-silver">–</div>
+        <div class="price-unit">USD / oz</div>
+      </div>
+    </div>
+    <div class="alerts-section">
+      <div class="alerts-title">Preisalarm</div>
+      <div class="alert-row">
+        <div class="alert-group">
+          <label>▲ Alarm ÜBER</label>
+          <div class="input-wrap">
+            <input type="number" id="alert-silver-high" placeholder="z.B. 35" step="0.1" min="0">
+            <span class="input-currency">$</span>
+          </div>
+        </div>
+        <div class="alert-group">
+          <label>▼ Alarm UNTER</label>
+          <div class="input-wrap">
+            <input type="number" id="alert-silver-low" placeholder="z.B. 28" step="0.1" min="0">
+            <span class="input-currency">$</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert-status" id="status-silver"></div>
+    </div>
+  </div>
+
+  <!-- BITCOIN -->
+  <div class="asset-card" id="card-bitcoin">
+    <div class="card-header">
+      <div class="asset-icon btc-icon">₿</div>
+      <div class="asset-info">
+        <div class="asset-name">Bitcoin</div>
+        <div class="asset-sub">BTC-USD · Krypto</div>
+      </div>
+      <div class="price-display">
+        <div class="price-value loading" id="price-bitcoin">–</div>
+        <div class="price-unit">USD / BTC</div>
+      </div>
+    </div>
+    <div class="alerts-section">
+      <div class="alerts-title">Preisalarm</div>
+      <div class="alert-row">
+        <div class="alert-group">
+          <label>▲ Alarm ÜBER</label>
+          <div class="input-wrap">
+            <input type="number" id="alert-bitcoin-high" placeholder="z.B. 100000" step="100" min="0">
+            <span class="input-currency">$</span>
+          </div>
+        </div>
+        <div class="alert-group">
+          <label>▼ Alarm UNTER</label>
+          <div class="input-wrap">
+            <input type="number" id="alert-bitcoin-low" placeholder="z.B. 80000" step="100" min="0">
+            <span class="input-currency">$</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert-status" id="status-bitcoin"></div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="next-update" id="nextUpdate">Nächste Aktualisierung: –</div>
+  <button class="sound-toggle active" id="soundToggle" onclick="toggleSound()">
+    <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+    </svg>
+    Sound AN
+  </button>
+</footer>
+
+<script>
+  // ── State ──
+  const ASSETS = ['gold', 'silver', 'bitcoin'];
+  let prices = { gold: null, silver: null, bitcoin: null };
+  let prevPrices = { gold: null, silver: null, bitcoin: null };
+  let soundEnabled = true;
+  let alertsTriggered = {};  // prevent repeated alerts
+  let countdown = 60;
+  let countdownInterval = null;
+  let fetchInProgress = false;
+
+  // ── Audio Engine (Web Audio API) ──
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playAlert(type = 'high') {
+    if (!soundEnabled) return;
+    try {
+      const ctx = getAudioCtx();
+      const now = ctx.currentTime;
+
+      // Three-tone alert: punchy and audible
+      const notes = type === 'high' ? [880, 1046, 1318] : [659, 523, 392];
+
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i * 0.15);
+
+        gain.gain.setValueAtTime(0, now + i * 0.15);
+        gain.gain.linearRampToValueAtTime(0.4, now + i * 0.15 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.4);
+
+        osc.start(now + i * 0.15);
+        osc.stop(now + i * 0.15 + 0.5);
+      });
+    } catch(e) { console.warn('Audio error:', e); }
+  }
+
+  // ── Price Formatting ──
+  function formatPrice(asset, val) {
+    if (val === null || val === undefined) return '–';
+    if (asset === 'bitcoin') {
+      return '$' + val.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+    return '$' + val.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // ── Update UI ──
+  function updatePriceUI(asset, price) {
+    const el = document.getElementById('price-' + asset);
+    if (!el) return;
+
+    el.classList.remove('loading', 'up', 'down');
+    el.textContent = formatPrice(asset, price);
+
+    if (prevPrices[asset] !== null && price !== null) {
+      if (price > prevPrices[asset]) el.classList.add('up');
+      else if (price < prevPrices[asset]) el.classList.add('down');
+      setTimeout(() => el.classList.remove('up', 'down'), 2000);
+    }
+  }
+
+  // ── Alert Checking ──
+  function checkAlerts(asset, price) {
+    if (price === null) return;
+
+    const highInput = parseFloat(document.getElementById('alert-' + asset + '-high').value);
+    const lowInput = parseFloat(document.getElementById('alert-' + asset + '-low').value);
+    const statusEl = document.getElementById('status-' + asset);
+    const card = document.getElementById('card-' + asset);
+
+    let badges = '';
+
+    // HIGH alert
+    if (!isNaN(highInput) && highInput > 0) {
+      const key = asset + '-high-' + highInput;
+      if (price >= highInput) {
+        badges += `<div class="alert-badge active-high">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+          ▲ ÜBER $${highInput.toLocaleString()}</div>`;
+        if (!alertsTriggered[key]) {
+          alertsTriggered[key] = true;
+          playAlert('high');
+          showToast(asset, 'high', price, highInput);
+          card.classList.add('alert-triggered');
+          setTimeout(() => card.classList.remove('alert-triggered'), 1500);
+        }
+      } else {
+        delete alertsTriggered[key];
+        badges += `<div class="alert-badge">▲ Alarm: $${highInput.toLocaleString()}</div>`;
+      }
+    }
+
+    // LOW alert
+    if (!isNaN(lowInput) && lowInput > 0) {
+      const key = asset + '-low-' + lowInput;
+      if (price <= lowInput) {
+        badges += `<div class="alert-badge active-low">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22l-3-7H2l5.5-4-2-7L12 8l6.5-4-2 7L22 15h-7z"/></svg>
+          ▼ UNTER $${lowInput.toLocaleString()}</div>`;
+        if (!alertsTriggered[key]) {
+          alertsTriggered[key] = true;
+          playAlert('low');
+          showToast(asset, 'low', price, lowInput);
+          card.classList.add('alert-triggered');
+          setTimeout(() => card.classList.remove('alert-triggered'), 1500);
+        }
+      } else {
+        delete alertsTriggered[key];
+        badges += `<div class="alert-badge">▼ Alarm: $${lowInput.toLocaleString()}</div>`;
+      }
+    }
+
+    statusEl.innerHTML = badges;
+  }
+
+  // ── Toast Notification ──
+  function showToast(asset, type, currentPrice, targetPrice) {
+    const names = { gold: 'Gold', silver: 'Silber', bitcoin: 'Bitcoin' };
+    const icons = { gold: '🥇', silver: '🥈', bitcoin: '₿' };
+    const dir = type === 'high' ? 'gestiegen ÜBER' : 'gefallen UNTER';
+    const container = document.getElementById('toastContainer');
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `
+      <div class="toast-icon">${icons[asset]}</div>
+      <div class="toast-content">
+        <div class="toast-title">${names[asset]} Preisalarm!</div>
+        <div class="toast-msg">${names[asset]} ist ${dir} $${targetPrice.toLocaleString()} — Aktuell: ${formatPrice(asset, currentPrice)}</div>
+      </div>`;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('hide');
+      setTimeout(() => toast.remove(), 350);
+    }, 5000);
+  }
+
+  // ── Status Indicator ──
+  function setStatus(state) {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    dot.className = 'dot ' + state;
+    if (state === 'live') text.textContent = 'LIVE';
+    else if (state === 'error') text.textContent = 'FEHLER';
+    else text.textContent = '–';
+  }
+
+  // ── Fetch Prices ──
+  async function fetchPrices() {
+    if (fetchInProgress) return;
+    fetchInProgress = true;
+    try {
+      const res = await fetch('/api/prices', { signal: AbortSignal.timeout(15000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      setStatus('live');
+
+      ASSETS.forEach(asset => {
+        const info = data[asset];
+        if (!info || info.price === null) return;
+
+        prevPrices[asset] = prices[asset];
+        prices[asset] = info.price;
+
+        updatePriceUI(asset, prices[asset]);
+        checkAlerts(asset, prices[asset]);
+      });
+
+    } catch(e) {
+      console.error('Fetch error:', e);
+      setStatus('error');
+      // Don't reset prices on error — keep showing last known values
+    } finally {
+      fetchInProgress = false;
+    }
+  }
+
+  // ── Countdown & Progress ──
+  const INTERVAL = 60; // seconds
+
+  function startCountdown() {
+    countdown = INTERVAL;
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownInterval = setInterval(() => {
+      countdown--;
+      const pct = ((INTERVAL - countdown) / INTERVAL * 100).toFixed(1);
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('nextUpdate').textContent = `Aktualisierung in ${countdown}s`;
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        fetchPrices().then(() => startCountdown());
+      }
+    }, 1000);
+  }
+
+  // ── Sound Toggle ──
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById('soundToggle');
+    const icon = document.getElementById('soundIcon');
+    if (soundEnabled) {
+      btn.classList.add('active');
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg> Sound AN`;
+    } else {
+      btn.classList.remove('active');
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+      </svg> Sound AUS`;
+    }
+    // Unlock audio context on user gesture
+    getAudioCtx();
+    if (soundEnabled) playAlert('high');
+  }
+
+  // ── Live alert re-check on input change ──
+  document.querySelectorAll('input[type=number]').forEach(input => {
+    input.addEventListener('change', () => {
+      alertsTriggered = {}; // Reset so changed alerts can fire again
+      ASSETS.forEach(a => checkAlerts(a, prices[a]));
+    });
+  });
+
+  // ── Load saved alerts from localStorage ──
+  function saveAlerts() {
+    const saved = {};
+    ASSETS.forEach(a => {
+      saved[a + '-high'] = document.getElementById('alert-' + a + '-high').value;
+      saved[a + '-low'] = document.getElementById('alert-' + a + '-low').value;
+    });
+    try { localStorage.setItem('assetalert-alerts', JSON.stringify(saved)); } catch(e) {}
+  }
+
+  function loadAlerts() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('assetalert-alerts') || '{}');
+      ASSETS.forEach(a => {
+        if (saved[a + '-high']) document.getElementById('alert-' + a + '-high').value = saved[a + '-high'];
+        if (saved[a + '-low']) document.getElementById('alert-' + a + '-low').value = saved[a + '-low'];
+      });
+    } catch(e) {}
+  }
+
+  document.querySelectorAll('input[type=number]').forEach(input => {
+    input.addEventListener('input', saveAlerts);
+  });
+
+  // ── Init ──
+  loadAlerts();
+  setStatus('');
+  ASSETS.forEach(a => {
+    document.getElementById('price-' + a).classList.add('loading');
+    document.getElementById('price-' + a).textContent = 'Laden…';
+  });
+
+  fetchPrices().then(() => startCountdown());
+</script>
+</body>
+</html>

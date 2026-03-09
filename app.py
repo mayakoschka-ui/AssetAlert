@@ -115,7 +115,7 @@ def api_metals():
         r = SESSION.get("https://goldprice.today/api.php", timeout=10)
         d = r.json()
         gold = float(d["EUR"]["ounce"])
-        silver = float(d["EUR"]["ounce"] / float(d["XAG"]["ounce"]
+        silver = float(d["EUR"]["ounce"]) / float(d["XAG"]["ounce"])
     except Exception as e:
         logger.warning("goldprice error: %s", e)
     return jsonify({"gold": gold, "silver": silver})

@@ -112,23 +112,20 @@ def api_metals():
     gold = None
     silver = None
     try:
-        r = SESSION.get("https://gold-api.com/price/XAU", timeout=10)
-        gold = r.json().get("price")
-    except Exception:
-        pass
-    try:
-        r = SESSION.get("https://gold-api.com/price/XAG", timeout=10)
-        silver = r.json().get("price")
-    except Exception:
-        pass
+        r = SESSION.get("https://goldprice.today/api.php", timeout=10)
+        d = r.json()
+        gold = float(d["EUR"]["ounce"])
+        silver = float(d["EUR"]["ounce"] / float(d["XAG"]["ounce"]
+    except Exception as e:
+        logger.warning("goldprice error: %s", e)
     return jsonify({"gold": gold, "silver": silver})
 
-
+                                                 
 @app.route("/health")
 def health():
     return jsonify({"ok": True, "time": time.time()})
 
-
+                                                 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

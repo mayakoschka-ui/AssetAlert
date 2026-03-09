@@ -319,7 +319,7 @@ async function fetchGoldSilver(){ 
   try{
     const r=await fetch('/api/metals');
     const d=await r.json();
-    if(d.gold&&dsilver)return{gold:d.gold,silver:d.silver};
+    if(d.gold&&d.silver)return{gold:d.gold,silver:d.silver};
   }catch(e){}
   return{gold:null,silver:null};
 }

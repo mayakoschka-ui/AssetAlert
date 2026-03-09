@@ -317,14 +317,10 @@ return null;
 
 async function fetchGoldSilver(){  
   try{
-    const r=await fetch('https://goldprice.today/api.php');
+    const r=await fetch('/api/metals');
     const d=await r.json();
-    if(d.EUR&&d.XAG){
-      const gold=parseFloat(d.EUR.ounce);
-      const silver=parseFloat(d.EUR.ounce)/parseFloat(d.XAG.ounce);
-      if(gold>0&&silver>0)return{gold,silver};
-    }
-  }catch(e){console.log('goldprice error:',e);}
+    if(d.gold&&dsilver)return{gold:d.gold,silver:d.silver};
+  }catch(e){}
   return{gold:null,silver:null};
 }
 

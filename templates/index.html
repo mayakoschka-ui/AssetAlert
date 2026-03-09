@@ -327,7 +327,7 @@ async function fetchGoldSilver(){ 
       const silver=silverXAG*eurPerUSD;
       if(gold&&silver)return{gold,silver};
     }
-  }catch(e){console.log('goldprice error:'e);}
+  }catch(e){console.log('goldprice error:',e);}
   return{gold:null,silver:null};
 }
 

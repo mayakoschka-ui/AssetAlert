@@ -315,12 +315,17 @@ try{const r=await fetch('https://open.er-api.com/v6/latest/USD');const d=await r
 return null;
 }
 
-async function fetchGoldSilver(){  try{
-    const r=await fetch('/api/metals');
+async function fetchGoldSilver(){  
+  try{
+    const r=await fetch('https://goldprice.today/api.php');
     const d=await r.json();
-    if(d.gold&&d.silver)return{gold:parseFloat(d.gold),silver:parseFloat(d.silver)};
-  }catch(e){}
-  return{gold:null,silver:null};
+    if(d.EUR&&d.XAG){
+      const gold=parserFloat(d.EUR.ounce);
+      const silver=parseFloat(d.XAG.ounce)*parseFloat(d.EUR.ounce)/parseFloate(d.USD.ounce);
+      if(gold&&silver)return{gold,silver};
+    }
+  }catch(e){}
+  return{gold:null,silver:null};
 }
 
 async function fetchBTC(){
@@ -331,18 +336,43 @@ return null;
 }
 
 async function fetchAll(){
-if(fetching)return;
-fetching=true;
-try{
-const[rate,metals,btc]=await Promise.all([fetchEUR(),fetchGoldSilver(),fetchBTC()]);
-if(rate){eurRate=rate;document.getElementById('eurDisp').textContent='1 USD = '+eurRate.toFixed(4)+' EUR';}
-let ok=false;
-for(const[a,usd]of[['gold',metals.gold],['silver',metals.silver],['bitcoin',btc]]){
-if(usd&&eurRate){prevEUR[a]=eurPrices[a];eurPrices[a]=usd*eurRate;setPrice(a,eurPrices[a]);recheck(a);ok=true;}
-}
-setStatus(ok?'live':'error');
-}catch(e){setStatus('error');}
-finally{fetching=false;}
+  if(fetching)return;
+  fetching=true;
+  try{
+    const[metals,btcUSD,rate]=await Promise.all([
+      fetchGoldSilver(),
+      fetchBTC(),
+      fetchEUR()
+    ]);  
+    if(rate){
+      eurRate=rate;
+      document.getElementById('eurDisp').textContent='1 USD = '+eurRate.toFixed(4)+' EUR';
+    }
+    let ok=false;
+    if(metals.gold){
+      prevEUR.gold=eurPrices.gold;
+      eurPrices.gold=metals.gold;
+      setPrice('gold',eurPrices.gold);
+      recheck('gold');
+      ok=true;
+    }
+    if(metals.silver){
+      prevEUR.silver=eurPrices.silver;
+      eurPrices.silver=metals.silver;
+      setPrice('silver',eurPrices.silver);
+      recheck('silver');
+      ok=true;
+    }
+    if(btcUSD&&eurRate){
+      prevEUR.bitcoin=eurPrices.bitcoin;
+      eurPrices.bitcoin=btcUSD*eurRate;
+      setPrice('bitcoin',eurPrices.bitcoin);
+      recheck('recheck');
+      ok=true;
+    }
+    setStatus(ok?'live':'error');
+  }catch(e){setStatus('error');}
+  finally{fetching=false;}
 }
 
 const IV=60;

@@ -320,7 +320,7 @@ async function fetchGoldSilver(){ 
     const r=await fetch('https://goldprice.today/api.php');
     const d=await r.json();
     if(d.EUR&&d.XAG){
-      const gold=parserFloat(d.EUR.ounce);
+      const gold=parseFloat(d.EUR.ounce);
       const silver=parseFloat(d.XAG.ounce)*parseFloat(d.EUR.ounce)/parseFloate(d.USD.ounce);
       if(gold&&silver)return{gold,silver};
     }
@@ -367,7 +367,7 @@ async function fetchAll(){
       prevEUR.bitcoin=eurPrices.bitcoin;
       eurPrices.bitcoin=btcUSD*eurRate;
       setPrice('bitcoin',eurPrices.bitcoin);
-      recheck('recheck');
+      recheck('bitcoin');
       ok=true;
     }
     setStatus(ok?'live':'error');

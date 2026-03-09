@@ -321,10 +321,13 @@ async function fetchGoldSilver(){ 
     const d=await r.json();
     if(d.EUR&&d.XAG){
       const gold=parseFloat(d.EUR.ounce);
-      const silver=parseFloat(d.XAG.ounce)*parseFloat(d.EUR.ounce)/parseFloate(d.USD.ounce);
+      const silverXAG=parseFloat(d.XAG.ounce);
+      const goldUSD=parseFloat(d.USD.ounce);
+      const eurPerUSD=parseFloat(d.EUR.ounce)/goldUSD;
+      const silver=silverXAG*eurPerUSD;
       if(gold&&silver)return{gold,silver};
     }
-  }catch(e){}
+  }catch(e){console.log('goldprice error:'e);}
   return{gold:null,silver:null};
 }
 

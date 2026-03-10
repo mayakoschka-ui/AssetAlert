@@ -180,20 +180,12 @@ if(actx.state==='suspended')actx.resume();
 return actx;
 }
 function beep(dir){
-if(!soundOn)return;
-try{
-const c=getActx(),t=c.currentTime;
-const notes=dir==='high'?[880,1047,1319]:[659,523,392];
-notes.forEach((f,i)=>{
-const o=c.createOscillator(),g=c.createGain();
-o.connect(g);g.connect(c.destination);
-o.type='sine';o.frequency.setValueAtTime(f,t+i*.15);
-g.gain.setValueAtTime(0,t+i*.15);
-g.gain.linearRampToValueAtTime(1.0,t+i*.15+.02);
-g.gain.exponentialRampToValueAtTime(.001,t+i*.15+.45);
-o.start(t+i*.15);o.stop(t+i*.15+.55);
-});
-}catch(e){}
+  if(!soundOn)return;
+  try{
+    const audio=new Audio('/static/alarm.mp3');
+    audio.volume=1.0;
+    audio.play();
+  }catch(e){console.log('sound error:',e);}
 }
 
 function fmtEUR(a,v){
